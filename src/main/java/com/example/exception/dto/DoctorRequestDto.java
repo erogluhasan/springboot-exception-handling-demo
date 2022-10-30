@@ -1,5 +1,6 @@
 package com.example.exception.dto;
 
+import com.example.exception.exception.IpAddress;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -22,5 +23,8 @@ public class DoctorRequestDto implements Serializable {
     @NotEmpty( message = "En az bir uzmanlık alanı seçilmeli")
     //@Size(min=1,)
     private List<Long> professionIdList;
+
+    @IpAddress(message = "Hatalı ip adresi")
+    private String ip;
 
 }
