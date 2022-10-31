@@ -1,5 +1,4 @@
-# springboot-exception-handling-demo
-Spring Boot Exception Handling
+# Spring Boot Exception Handling
 
 Spring framework, hata işleme için mükemmel özelliklere sahiptir. Ancak, exceptionları ele almak ve API istemcisine anlamlı yanıtlar döndürmek için bu özellikleri kullanmak geliştiriciye bırakılmıştır.
 
@@ -7,18 +6,26 @@ Spring framework, hata işleme için mükemmel özelliklere sahiptir. Ancak, exc
 
 @ControllerAdvice,”Spring'de bir ek açıklamadır” ve adından da anlaşılacağı gibi, birden çok denetleyici için "tavsiye" dir. @ControllerAdvice yapıcısı, uygulamanızın yalnızca ilgili bölümünü taramanıza ve yalnızca kurucuda belirtilen ilgili sınıflar tarafından atılan istisnaları işlemenize izin veren bazı özel argümanlarla birlikte gelir. Varsayılan olarak, uygulamanızdaki tüm sınıfları tarayacak ve işleyecektir. Aşağıda, istisnaları işlemek için yalnızca belirli sınıfları kısıtlamak için kullanabileceğimiz bazı türler bulunmaktadır.
 
-Etkilenen denetleyicilerin alt kümesi, @ControllerAdvice üzerinde şu seçiciler kullanılarak tanımlanabilir: annotations(), assignableTypes () ve basePackages().  
+Etkilenen denetleyicilerin alt kümesi, @ControllerAdvice üzerinde şu seçiciler kullanılarak tanımlanabilir: 
 
-annotations() : Belirtilen notlarla açıklamalı olan controller, @ControllerAdvice açıklamalı sınıf tarafından desteklenecek ve bu sınıfların istisnası için uygun olacaktır. Örneğin; @ControllerAdvice(annotations = DoctorController.class)
+- ✨ annotations()
+- ✨ basePackages()
+- ✨ assignableTypes()
 
-basePackages() - Taramak istediğimiz paketleri belirterek ve bunlar için istisnaları ele alarak. Örneğin. @ControllerAdvice(basePackages = "org.example.controllers")
+## _annotations()_
+Belirtilen notlarla açıklamalı olan controller, @ControllerAdvice açıklamalı sınıf tarafından desteklenecek ve bu sınıfların istisnası için uygun olacaktır. Örneğin; @ControllerAdvice(annotations = DoctorController.class)
+## _basePackages()_
+Taramak istediğimiz paketleri belirterek ve bunlar için istisnaları ele alarak. Örneğin. @ControllerAdvice(basePackages = "org.example.controllers")
+## _assignableTypes()_
+Bu argüman, belirtilen sınıflardan istisnaları taramayı ve işlemeyi sağlayacaktır. Örneğin. @ControllerAdvice(assignableTypes = { MyController1.class, MyController2.class})
+ 
+> @ControllerAdvice dışında @RestControllerAdvice notasyonu bulunmaktadır. @RestControllerAdvice, hem @ControllerAdvice hem de @ResponseBody'nin birleşimidir. @ControllerAdvice ek açıklamasını RESTful Services'deki istisnaları işlemek için kullanabiliriz ancak @ResponseBody'yi ayrı olarak eklememiz gerekiyor.
+ 
+## Spring Boot Projesinde Uygulanması
 
-assignableTypes (): Bu argüman, belirtilen sınıflardan istisnaları taramayı ve işlemeyi sağlayacaktır. Örneğin. @ControllerAdvice(assignableTypes = { MyController1.class, MyController2.class})
-
-@ControllerAdvice dışında @RestControllerAdvice notasyonu bulunmaktadır. @RestControllerAdvice, hem @ControllerAdvice hem de @ResponseBody'nin birleşimidir. @ControllerAdvice ek açıklamasını RESTful Services'deki istisnaları işlemek için kullanabiliriz ancak @ResponseBody'yi ayrı olarak eklememiz gerekiyor.
- 
-Spring Boot Projesinde Uygulanması
 Dependecy olarak aşağıdakileri eklememiz gerekmektedir.
+
+```xml
 <dependency>
     <groupId>javax.validation</groupId>
     <artifactId>validation-api</artifactId>
@@ -28,10 +35,11 @@ Dependecy olarak aşağıdakileri eklememiz gerekmektedir.
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-validation</artifactId>
 </dependency>
+```
 
 Uygulamada ilk olarak exceptionları özelleştirmek için aşağıdaki sınıfları oluşturduk.
 ErrorResponse.java
-
+```java
 @Getter
 @Setter
 @RequiredArgsConstructor
@@ -59,9 +67,10 @@ public class ErrorResponse {
         errors.add(new ValidationError(field, message));
     }
 }
-
-Burada dönülecek hata sınıfımızı oluşturduk.
+```
+Daha sonra tüm exceptionları yakalamak için hatayakalama sınıfımızı oluşturduk.
 GlobalExceptionHandler.java 
+```java
 
 @Slf4j(topic = "GLOBAL_EXCEPTION_HANDLER")
 @RestControllerAdvice
@@ -133,12 +142,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         return buildErrorResponse(ex, status, request);
     }
-}
-
-Burada dikkat edilmesi gereken husus @ExceptionHandler(NoSuchElementFoundException.class) notasyonudur. Bununla fırlatılacak hata tipine göre yakalamamız sağlanıyor. new NoSuchElementFoundException() olarak fırlatılan exception bu methoda düşüp işlenecektir.
+```
+>Burada dikkat edilmesi gereken husus @ExceptionHandler(NoSuchElementFoundException.class) notasyonudur. Bununla fırlatılacak hata tipine göre yakalamamız sağlanıyor. new NoSuchElementFoundException() olarak fırlatılan exception bu methoda düşüp işlenecektir.
 
 @Valid notasyonu ile de requestleri kontrol edebilmemiz sağlanıyor.
 DoctorRequestDto.java
+```java
 @Getter
 @Setter
 public class DoctorRequestDto implements Serializable {
@@ -154,15 +163,17 @@ public class DoctorRequestDto implements Serializable {
     private List<Long> professionIdList;
 
 }
-
-
+```
+Rest servisinde validation yapılan methodumuza örnek vermek gerekirse;
+```java
 @RequestMapping(value = "/save", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 public ResponseEntity<DoctorResponseDto> createDoctor(@RequestBody @Valid DoctorRequestDto doctorRequestDTO) {
-….
+    //TODO something
 }
+```
+>@RequestBody @Valid ile birlikte kullanıldığında requestin doğrulaması yapılmaktadır. Hata durumunda şu şekilde response dönülmektedir.
 
-@RequestBody @Valid ile birlikte kullanıldığında requestin doğrulaması yapılmaktadır. Hata durumunda şu şekilde response dönülmektedir.
-
+```json
 {
     "status": 422,
     "message": "Validation error. Check 'errors' field for details.",
@@ -175,11 +186,13 @@ public ResponseEntity<DoctorResponseDto> createDoctor(@RequestBody @Valid Doctor
     ]
 }
 
+```
 Bunuda GlobalExceptionHandler.java sınıfımızda handleMethodArgumentNotValid override ederek özelleştirebiliyoruz.
 
+## Özel validasyon notasyonu yazmak
 javax.validation.constraints notasyonlarına ek olarak özel doğrulama notasyonları yazılabilir. @IpAddress diye bir doğrulama notasyonu yazalım.
 IpAddress.java
-
+```java
 @Target({ FIELD })
 @Retention(RUNTIME)
 @Constraint(validatedBy = IpAddressValidator.class)
@@ -193,9 +206,9 @@ public @interface IpAddress {
     Class<? extends Payload>[] payload() default { };
 
 }
-
+```
 IpAddressValidator.java
-
+```java
 public class IpAddressValidator implements ConstraintValidator<IpAddress, String> {
 
     @Override
@@ -218,15 +231,17 @@ public class IpAddressValidator implements ConstraintValidator<IpAddress, String
             return false;
         }
     }
-
 }
 
-
+```
+Daha sonra bu notasyonu istediğimiz yerde şu şekilde kullanabiliriz:
+```java
 @IpAddress(message = "Hatalı ip adresi")
 private String ip;
-
+```
 Bu şekilde request dto sınıfımıza eklediğimiz de hatalı bir ip adresli istekte aşağıdaki şekilde hata dönülecektir.
 
+```json
 {
     "status": 422,
     "message": "Validation error. Check 'errors' field for details.",
@@ -238,4 +253,8 @@ Bu şekilde request dto sınıfımıza eklediğimiz de hatalı bir ip adresli is
         }
     ]
 }
+```
 
+Uygulamanın tüm kodlarına şuradan ulaşabilirsiniz: [Github](https://github.com/erogluhasan/springboot-exception-handling-demo)
+
+ 
